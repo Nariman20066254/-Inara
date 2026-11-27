@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Рассвет для Инары ☀️</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{height:100%;overflow:hidden;background:#0a0a2a;color:#fff;font-family:"Cormorant Garamond",Georgia,serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:manipulation}
+.top{position:fixed;left:0;right:0;top:calc(26px + env(safe-area-inset-top));padding:0 20px;text-align:center;pointer-events:none;transition:opacity .8s}
+h1{font:700 clamp(40px,12vw,58px)/1.05 "Caveat",cursive;text-shadow:0 2px 18px #0009}
+.sub{font-size:21px;font-style:italic;margin-top:8px;text-shadow:0 1px 8px #000b}
+#card{position:fixed;left:50%;top:44%;width:min(86vw,360px);transform:translate(-50%,-50%) scale(.7);opacity:0;visibility:hidden;padding:26px 22px;border-radius:28px;background:#ffffff2b;border:1px solid #ffffff77;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 20px 60px #0007,0 0 50px #ffb45c66;text-align:center;transition:.55s cubic-bezier(.2,1.4,.4,1);pointer-events:none}
+#card.on{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
+#ico{font-size:52px}
+#txt{font-size:clamp(23px,6.8vw,28px);font-weight:700;line-height:1.25;margin-top:8px;text-shadow:0 1px 10px #000a}
+.bottom{position:fixed;left:0;right:0;bottom:calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:12px}
+.btn{border:0;border-radius:50px;padding:16px 36px;font:700 23px "Cormorant Garamond",Georgia,serif;color:#5a1a2e;background:linear-gradient(135deg,#fff3c4,#ffb07c 55%,#ff85a8);box-shadow:0 0 34px #ffae6bcc;cursor:pointer;animation:pulse 2s infinite}
+.btn:active{filter:brightness(.92)}
+@keyframes pulse{50%{transform:scale(1.05)}}
+#dots{display:flex;gap:9px}
+#dots i{width:10px;height:10px;border-radius:50%;background:#fff5;transition:.4s}
+#dots i.on{background:#ffe08a;box-shadow:0 0 12px #ffc861}
+#final{position:fixed;left:0;right:0;top:calc(20px + env(safe-area-inset-top));padding:0 20px;text-align:center;opacity:0;visibility:hidden;transition:opacity 2s;color:#5c173a;pointer-events:none}
+#final.on{opacity:1;visibility:visible}
+#final h2{font:700 clamp(42px,13vw,64px)/1 "Caveat",cursive;text-shadow:0 0 16px #fff,0 0 30px #fff}
+#final p{font-size:clamp(20px,5.6vw,24px);font-weight:700;line-height:1.35;margin:12px auto 0;max-width:380px;text-shadow:0 0 8px #fff,0 0 16px #fff}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="top" id="top"><h1>Инара, это<br>твой рассвет</h1><p class="sub">Каждый фонарик несёт тебе пожелание</p></div>
+<div id="card" aria-live="polite"><div id="ico"></div><div id="txt"></div></div>
+<div id="final"><h2>Сияй,<br>солнышко</h2><p>Пусть сегодня всё получается легко. Ты умеешь больше, чем тебе кажется. Улыбнись, тебе очень идёт.<br>С теплом, Нариман 🤍</p></div>
+<div class="bottom"><div id="dots"></div><button class="btn" id="go">Запустить фонарик 🏮</button></div>
+<script>
+const WISHES=[
+['☀️','Пусть сегодняшний день будет к тебе нежным и подарит повод улыбнуться'],
+['💪','Ты справишься. Даже если не сразу, даже если по маленькому шагу'],
+['🌷','Тебе не нужно быть идеальной, чтобы быть прекрасной'],
+['🍀','Пусть удача идёт рядом и открывает нужные двери'],
+['☁️','Если устала, отдохни. Ты это заслужила'],
+['✨','Пусть твои мечты становятся ближе с каждым днём'],
+['🤍','И помни: ты не одна. Я рядом и верю в тебя']
+];
+const $=id=>document.getElementById(id),cv=$('c'),x=cv.getContext('2d');
+const R=(a,b)=>a+Math.random()*(b-a),clamp=v=>Math.max(0,Math.min(1,v));
+let W,H,n=0,dawn=0,goal=0,t=0,end=0,done=false,busy=false;
+let stars=[],lan=[],flowers=[],petals=[],sparks=[];
+function resize(){
+  const d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;x.setTransform(d,0,0,d,0,0);
+  stars=Array.from({length:150},()=>[R(0,W),R(0,H*.75),R(.4,1.6),R(0,7)]);
+  flowers=Array.from({length:34},(_,i)=>({x:(i+R(.1,.9))/34*W,h:R(H*.08,H*.3),s:R(11,24),d:R(0,2.6),c:['#ff5d8f','#ff8fab','#ffffff','#c77dff','#ffca3a'][i%5],p:R(0,7)})).sort((a,b)=>b.h-a.h);
+}
+const mix=(a,b,k)=>`rgb(${a.map((v,i)=>v+(b[i]-v)*k|0)})`;
+/* небо: ночь → сумерки → рассвет */
+const SKY=[[[6,7,32],[22,16,66],[58,30,92]],[[40,32,100],[142,66,134],[255,128,110]],[[130,196,255],[255,192,214],[255,225,158]]];
+function disc(px,py,r,c){x.fillStyle=c;x.beginPath();x.arc(px,py,r,0,7);x.fill()}
+function glow(px,py,r,c){const g=x.createRadialGradient(px,py,0,px,py,r);g.addColorStop(0,c);g.addColorStop(1,'rgba(255,150,60,0)');x.fillStyle=g;x.fillRect(px-r,py-r,r*2,r*2)}
+function hill(y,a,f,c){x.fillStyle=c;x.beginPath();x.moveTo(0,H);for(let i=0;i<=W+10;i+=10)x.lineTo(i,y+Math.sin(i*f+a)*H*.03);x.lineTo(W,H);x.fill()}
+function lantern(l){
+  const s=l.s,sway=Math.sin(t*1.4+l.p)*s*.12;
+  x.save();x.translate(l.x,l.y);x.rotate(sway/s*.6);
+  glow(0,0,s*2.6,'rgba(255,180,80,.55)');
+  const g=x.createLinearGradient(0,-s,0,s);g.addColorStop(0,'#ff6b4a');g.addColorStop(.65,'#ffb347');g.addColorStop(1,'#fff1a8');
+  x.fillStyle=g;x.beginPath();x.moveTo(-s*.5,s*.75);x.bezierCurveTo(-s*1.05,-s*.4,-s*.7,-s,0,-s);x.bezierCurveTo(s*.7,-s,s*1.05,-s*.4,s*.5,s*.75);x.closePath();x.fill();
+  x.fillStyle='#8a2f24';x.fillRect(-s*.5,s*.72,s,s*.12);
+  disc(0,s*.65,s*.16+Math.sin(t*12+l.p)*s*.03,'#fffbe0');
+  x.restore();
+}
+function flower(f,k){
+  if(k<=0)return;
+  const grow=clamp(k*1.6),open=clamp(k*1.6-.7),sw=Math.sin(t*1.3+f.p)*7,px=f.x+sw*grow,py=H-f.h*grow;
+  x.strokeStyle='#2f7d4f';x.lineWidth=3;x.beginPath();x.moveTo(f.x,H);x.quadraticCurveTo(f.x-sw,H-f.h*grow*.5,px,py);x.stroke();
+  const r=f.s*(.25+.75*open);
+  x.save();x.translate(px,py);x.rotate(sw*.03);x.fillStyle=f.c;
+  for(let i=0;i<7;i++){x.rotate(Math.PI*2/7);x.beginPath();x.ellipse(0,-r*.62,r*.36*(.4+.6*open),r*.65,0,0,7);x.fill()}
+  disc(0,0,r*.3,'#ffd23f');x.restore();
+}
+let prev=0;
+function draw(now){
+  const dt=Math.min((now-prev)/1000||.016,.05),k=dt*60;prev=now;t+=dt;
+  dawn+=(goal-dawn)*Math.min(1,dt*(done?.7:1.6));
+  const a=dawn<.5?0:1,m=dawn<.5?dawn*2:(dawn-.5)*2,g=x.createLinearGradient(0,0,0,H);
+  [0,.55,.9].forEach((s,i)=>g.addColorStop(s,mix(SKY[a][i],SKY[a+1][i],clamp(m))));
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  for(const s of stars){x.globalAlpha=clamp(1-dawn*1.5)*(.55+.45*Math.sin(t*2+s[3]));disc(s[0],s[1],s[2],'#fff')}
+  x.globalAlpha=1;
+  const sy=H*(1.02-.34*dawn);
+  glow(W/2,sy,W*.95,`rgba(255,205,120,${.75*dawn})`);
+  x.globalAlpha=clamp(dawn*1.6);disc(W/2,sy,W*.17,'#fff2b8');x.globalAlpha=1;
+  hill(H*.8,1,.012,mix([28,18,62],[150,130,190],dawn));
+  hill(H*.87,3,.017,mix([16,12,42],[92,160,120],dawn));
+  hill(H*.94,5,.01,mix([8,6,24],[55,125,85],dawn));
+  /* фонарики */
+  for(const l of lan){
+    l.age+=dt;l.y-=l.v*k;l.x+=Math.sin(t+l.p)*.35*k;
+    if(l.age>1.2&&l.s>l.min)l.s*=Math.pow(.992,k);
+    if(l.y<-60){l.y=H+60;l.x=R(20,W-20)}
+    lantern(l);
+  }
+  if(done){
+    end+=dt;
+    for(const f of flowers)flower(f,clamp((end-f.d)/2.4));
+    if(petals.length<55&&Math.random()<.35)petals.push({x:R(0,W),y:-12,v:R(.6,1.8),p:R(0,7),s:R(4,8)});
+    for(const p of petals){p.y+=p.v*k;p.x+=Math.sin(t*2+p.p)*k;if(p.y>H+10){p.y=-12;p.x=R(0,W)}
+      x.save();x.translate(p.x,p.y);x.rotate(t*2+p.p);x.fillStyle='#ff8fb1';x.beginPath();x.ellipse(0,0,p.s,p.s*.55,0,0,7);x.fill();x.restore()}
+  }
+  sparks=sparks.filter(s=>s.l>0);
+  for(const s of sparks){s.x+=s.vx*k;s.y+=s.vy*k;s.vy+=.05*k;s.l-=dt;x.globalAlpha=clamp(s.l);disc(s.x,s.y,2.5,s.c)}
+  x.globalAlpha=1;requestAnimationFrame(draw);
+}
+function burst(px,py,c=40){for(let i=0;i<c;i++){const a=R(0,7),v=R(1,6);sparks.push({x:px,y:py,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:R(.6,1.4),c:['#fff','#ffe08a','#ff8fab'][i%3]})}}
+/* мягкие колокольчики */
+let ac;
+function chime(list){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume();list.forEach((f,i)=>{const o=ac.createOscillator(),a=ac.createGain(),s=ac.currentTime+i*.16;o.frequency.value=f;a.gain.setValueAtTime(0,s);a.gain.linearRampToValueAtTime(.16,s+.02);a.gain.exponentialRampToValueAtTime(.001,s+1.8);o.connect(a).connect(ac.destination);o.start(s);o.stop(s+1.8)})}catch(e){}}
+const NOTES=[523,587,659,784,880,1047,1175];
+WISHES.forEach(()=>$('dots').appendChild(document.createElement('i')));
+function launch(px){
+  lan.push({x:px,y:H*.82,v:R(1.5,1.9),s:34,min:R(13,19),p:R(0,7),age:0});burst(px,H*.82,25);
+}
+$('go').onclick=()=>{
+  if(busy)return;
+  if(done){for(let i=0;i<5;i++)setTimeout(()=>launch(R(40,W-40)),i*180);chime([523,659,784,1047]);return}
+  if(n<WISHES.length){
+    busy=true;const i=n++;
+    $('top').style.opacity=0;$('card').classList.remove('on');
+    launch(W/2+R(-60,60));goal=n/WISHES.length*.65;chime([NOTES[i],NOTES[i]*1.5]);
+    try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
+    [...$('dots').children][i].classList.add('on');
+    setTimeout(()=>{[$('ico').textContent,$('txt').textContent]=WISHES[i];$('card').classList.add('on');busy=false;
+      $('go').textContent=n<WISHES.length?'Ещё фонарик 🏮':'Встретить рассвет ☀️'},750);
+  }else{
+    done=true;goal=1;$('card').classList.remove('on');$('dots').style.display='none';
+    $('go').textContent='Подарить ещё света 🏮';
+    for(let i=0;i<16;i++)setTimeout(()=>launch(R(30,W-30)),i*200);
+    chime([523,659,784,1047,1319,1568]);
+    setTimeout(()=>$('final').classList.add('on'),1800);
+  }
+};
+cv.addEventListener('pointerdown',e=>{burst(e.clientX,e.clientY)});
+addEventListener('resize',()=>{if(innerWidth!=W||Math.abs(innerHeight-H)>120)resize()});
+resize();requestAnimationFrame(draw);
+</script>
+</body>
+</html>
